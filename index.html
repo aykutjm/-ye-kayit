@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atakum Tenis Kulübü - Üyelik Sözleşmesi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // LÜTFEN GÜNCELLEYİN: EmailJS hesabınızdaki 'User ID'nizi yapıştırın
+            emailjs.init("SENIN_USER_ID_N"); 
+        })();
+    </script>
+    <style>
+        /* Stil kodlarınızda değişiklik yok, aynı kalabilir */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .header p { font-size: 1.2em; opacity: 0.9; }
+        .form-container { padding: 40px; }
+        .form-section { margin-bottom: 30px; padding: 25px; border-radius: 15px; background: #f8f9ff; border-left: 5px solid #667eea; }
+        .section-title { font-size: 1.4em; color: #2d5a27; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-weight: 600; color: #333; margin-bottom: 8px; font-size: 0.95em; }
+        input, select, textarea { padding: 12px 15px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 1em; transition: all 0.3s ease; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .contract-text { background: white; padding: 25px; border-radius: 10px; border: 2px solid #e1e5e9; height: 400px; overflow-y: auto; font-size: 0.85em; line-height: 1.6; color: #333; }
+        .signature-section { background: #fff; border: 2px dashed #667eea; border-radius: 15px; padding: 30px; text-align: center; }
+        .signature-canvas { border: 2px solid #e1e5e9; border-radius: 10px; cursor: crosshair; display: block; margin: 20px auto; }
+        .btn { padding: 12px 25px; border: none; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-secondary { background: #f8f9fa; color: #6c757d; border: 2px solid #e1e5e9; }
+        .btn-success { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-size: 1.2em; padding: 15px 40px; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .checkbox-group { display: flex; align-items: center; gap: 15px; margin-top: 20px; }
+        .warning, .info-box { background: #fff3cd; border-left: 5px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 10px; margin: 15px 0; }
+        .success-message { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 20px; border-radius: 15px; text-align: center; margin-top: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎾 Atakum Tenis Kulübü</h1>
+            <p>Online Üyelik Sözleşmesi</p>
+        </div>
+
+        <div class="form-container">
+            <form id="membershipForm">
+                
+                <div class="form-section">
+                    <h3 class="section-title">👤 Üye / Veli Bilgileri</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="fullName">Ad Soyad *</label>
+                            <input type="text" id="fullName" name="fullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tcno">T.C. Kimlik No *</label>
+                            <input type="text" id="tcno" name="tcno" pattern="[0-9]{11}" maxlength="11" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Telefon *</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-posta *</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="address">Adres *</label>
+                        <textarea id="address" name="address" rows="3" required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">🗓️ Üyelik Süresi</h3>
+                    <div class="form-group">
+                        <label for="membershipDuration">Üyelik Süresini Seçiniz *</label>
+                        <select id="membershipDuration" name="membershipDuration" required>
+                            <option value="">Seçiniz...</option>
+                            <option value="Aylık">Aylık</option>
+                            <option value="4 Aylık">4 Aylık</option>
+                        </select>
+                    </div>
+                    <div id="monthlyWarning" class="info-box" style="display: none;">
+                        <strong>Bilgilendirme:</strong> Aylık üyeliklerde, üyeliğinizi sonlandırmak için her ayın 14'üne kadar kayıt sildirmeniz gerekmektedir. Aksi takdirde üyelik otomatik olarak yenilenir.
+                    </div>
+                    <div id="fourMonthWarning" class="info-box" style="display: none;">
+                        <strong>Bilgilendirme:</strong> 4 aylık üyeliklerde, süreden önce iptal edilen üyeliklerde sözleşme gereği cayma bedeli tahsil edilir.
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">👶 Reşit Olmayan Üye</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isMinorCheck" name="isMinorCheck" style="width: 20px; height: 20px;">
+                        <label for="isMinorCheck">18 yaşından küçük bir üye için dolduruyorum.</label>
+                    </div>
+                    <div id="minorFields" style="display: none; margin-top: 20px;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="minorFullName">Reşit Olmayanın Adı Soyadı *</label>
+                                <input type="text" id="minorFullName" name="minorFullName">
+                            </div>
+                            <div class="form-group">
+                                <label for="minorDob">Reşit Olmayanın Doğum Tarihi *</label>
+                                <input type="date" id="minorDob" name="minorDob">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="section-title">📋 Üyelik Sözleşmesi</h3>
+                    <div class="contract-text">
+                        <h4>ÜYELİK SÖZLEŞMESİ</h4>
+                        <p><strong>1-) TARAFLAR</strong><br>
+                        <strong>A-KULÜP</strong><br>
+                        Adı-Soyadı : Aykut YILDIRIM<br>
+                        Ünvanı : Atakum Tenis<br>
+                        Adres : Derecik Mahallesi 1444. Sokak No:1 İlkadım/Samsun<br>
+                        Vergi No : 9540639540<br>
+                        Telefon : 0544 936 75 43<br>
+                        E-mail : y.aykut7455@gmail.com<br>
+                        Bu sözleşmede bundan sonra “EĞİTMEN/KULÜP” olarak anılacaktır.<br>
+                        <strong>B-ÜYE/VELİ</strong><br>
+                        Adı-Soyadı : [Bu alan formdan otomatik doldurulacaktır]<br>
+                        Adres : [Bu alan formdan otomatik doldurulacaktır]<br>
+                        TCKN : [Bu alan formdan otomatik doldurulacaktır]<br>
+                        Telefon : [Bu alan formdan otomatik doldurulacaktır]<br>
+                        E-mail : [Bu alan formdan otomatik doldurulacaktır]<br>
+                        Bu sözleşmede bundan sonra “ÜYE/VELİ” olarak anılacaktır.</p>
+                        
+                        <p><strong>2-) KONU</strong><br>
+                        İşbu üyelik sözleşmesi, üyelik işlemlerinin gerçekleştirilmesi ile işbu sözleşmenin onaylanması suretiyle, Eğitmen tarafından sunulacak hizmetin şartlarını ve tarafların karşılıklı hak ve yükümlülüklerini düzenlemektedir.</p>
+                        
+                        <p><strong>8- KİŞİSEL VE ÖZEL NİTELİKLİ KİŞİSEL VERİLERİN İŞLENMESİ</strong><br>
+                        Üye/Veli, işbu sözleşmeye taraf olma suretiyle, verdiği tüm bilgilerin... [sözleşmenin geri kalanı]</p>
+                        
+                        <p><strong>9-) SON HÜKÜMLER</strong><br>
+                        1) Bu anlaşmanın uygulanmasından kaynaklanan tüm ihtilaflarda Samsun mahkemeleri ve icra daireleri yetkilidir...</p>
+
+                        <p><strong>-Reşit olmayan katılımcıların velileri veya vasileri için...</strong></p>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="agreeContract" name="agreeContract" required>
+                        <label for="agreeContract">Üyelik sözleşmesini okudum, anladım ve kabul ediyorum. *</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">✍️ Dijital İmza</h3>
+                    <div class="signature-section">
+                        <p>Lütfen aşağıdaki alana imzanızı atın:</p>
+                        <canvas id="signatureCanvas" class="signature-canvas" width="400" height="200"></canvas>
+                        <div class="signature-buttons">
+                            <button type="button" class="btn btn-secondary" onclick="clearSignature()">İmzayı Temizle</button>
+                        </div>
+                        <div id="signatureWarning" class="warning" style="display: none;">
+                            <strong>Uyarı:</strong> Lütfen dijital imzanızı tamamlayın.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn btn-success" id="submitBtn">
+                        📄 Sözleşmeyi İmzala ve Onayla
+                    </button>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    <h3>✅ Başarılı!</h3>
+                    <p>Üyelik sözleşmeniz başarıyla tamamlandı. PDF dosyası indiriliyor ve bir kopyası kulübümüze iletildi.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // Dinamik uyarılar ve reşit olmayan formu için JavaScript
+    const durationSelect = document.getElementById('membershipDuration');
+    const monthlyWarning = document.getElementById('monthlyWarning');
+    const fourMonthWarning = document.getElementById('fourMonthWarning');
+    const isMinorCheck = document.getElementById('isMinorCheck');
+    const minorFields = document.getElementById('minorFields');
+    const minorFullNameInput = document.getElementById('minorFullName');
+    const minorDobInput = document.getElementById('minorDob');
+
+    durationSelect.addEventListener('change', function() {
+        if (this.value === 'Aylık') {
+            monthlyWarning.style.display = 'block';
+            fourMonthWarning.style.display = 'none';
+        } else if (this.value === '4 Aylık') {
+            monthlyWarning.style.display = 'none';
+            fourMonthWarning.style.display = 'block';
+        } else {
+            monthlyWarning.style.display = 'none';
+            fourMonthWarning.style.display = 'none';
+        }
+    });
+
+    isMinorCheck.addEventListener('change', function() {
+        if (this.checked) {
+            minorFields.style.display = 'block';
+            minorFullNameInput.required = true;
+            minorDobInput.required = true;
+        } else {
+            minorFields.style.display = 'none';
+            minorFullNameInput.required = false;
+            minorDobInput.required = false;
+        }
+    });
+
+    // İmza Canvas'ı ve Form Gönderme Kodları (Öncekiyle Benzer)
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let hasSignature = false;
+
+    // Canvas ve imza fonksiyonları... (değişiklik yok)
+    function resizeCanvas() { const container = canvas.parentElement; const containerWidth = container.clientWidth - 60; canvas.width = Math.min(400, containerWidth); canvas.height = 200; ctx.strokeStyle = '#2d5a27'; ctx.lineWidth = 2; ctx.lineCap = 'round'; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; const rect = canvas.getBoundingClientRect(); ctx.beginPath(); ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top); hasSignature = true; });
+    canvas.addEventListener('mousemove', (e) => { if (!isDrawing) return; const rect = canvas.getBoundingClientRect(); ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top); ctx.stroke(); });
+    const stopDrawing = () => { isDrawing = false; };
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); const touch = e.touches[0]; const mouseEvent = new MouseEvent('mousedown', { clientX: touch.clientX, clientY: touch.clientY }); canvas.dispatchEvent(mouseEvent); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); const touch = e.touches[0]; const mouseEvent = new MouseEvent('mousemove', { clientX: touch.clientX, clientY: touch.clientY }); canvas.dispatchEvent(mouseEvent); });
+    canvas.addEventListener('touchend', stopDrawing);
+    function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); hasSignature = false; document.getElementById('signatureWarning').style.display = 'none'; }
+    
+    // Form gönderme işlemi
+    document.getElementById('membershipForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (!hasSignature) { document.getElementById('signatureWarning').style.display = 'block'; return; }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'İşleniyor...';
+
+        const formData = new FormData(this);
+        const memberData = Object.fromEntries(formData.entries());
+
+        try {
+            await generateAndSendPDF(memberData);
+            document.getElementById('successMessage').style.display = 'block';
+        } catch (error) {
+            console.error('Hata:', error);
+            alert('Bir hata oluştu: ' + JSON.stringify(error));
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📄 Sözleşmeyi İmzala ve Onayla';
+        }
+    });
+
+    // PDF Oluşturma, Gönderme ve İndirme Fonksiyonu (GÜNCELLENDİ)
+    async function generateAndSendPDF(data) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+        // jsPDF'in çok satırlı metinleri işlemesi için ayarlar
+        const page_margin = 50;
+        const line_height = 15;
+        const page_width = doc.internal.pageSize.getWidth();
+        let yPos = page_margin;
+
+        // Metin ekleme yardımcı fonksiyonu
+        function addText(text, options = {}) {
+            const splitText = doc.splitTextToSize(text, page_width - page_margin * 2);
+            doc.setFont(options.font || 'helvetica', options.style || 'normal');
+            doc.setFontSize(options.size || 10);
+            doc.text(splitText, page_margin, yPos);
+            yPos += (splitText.length * line_height);
+            if (yPos > doc.internal.pageSize.getHeight() - page_margin) {
+                doc.addPage();
+                yPos = page_margin;
+            }
+        }
+        
+        // --- PDF İÇERİĞİ ---
+        addText('ÜYELİK SÖZLEŞMESİ', { size: 16, style: 'bold' });
+        yPos += line_height;
+
+        addText('1-) TARAFLAR', { style: 'bold' });
+        addText('A-KULÜP', { style: 'bold' });
+        addText('Adı-Soyadı : Aykut YILDIRIM\nÜnvanı : Atakum Tenis\nAdres : Derecik Mahallesi 1444. Sokak No:1 İlkadım/Samsun\nVergi No : 9540639540\nTelefon : 0544 936 75 43\nE-mail : y.aykut7455@gmail.com');
+        yPos += line_height;
+        
+        // Üye bilgileri formdan alınıp ekleniyor
+        addText('B-ÜYE/VELİ', { style: 'bold' });
+        addText(`Adı-Soyadı : ${data.fullName}\nAdres : ${data.address}\nTCKN : ${data.tcno}\nTelefon : ${data.phone}\nE-mail : ${data.email}`);
+        yPos += line_height;
+        
+        // Sözleşmenin geri kalanı
+        addText("İşbu sözleşmede bundan sonra “ÜYE/VELİ” olarak anılacaktır. Üye ve varsa veliye ait bilgiler yukarıda yer alan kısma ayrı ayrı yazılarak doldurulacaktır. Üye/Veli işbu sözleşmeyi onaylaması sırasında Eğitmen tarafından kendisinden talep edilen her türlü bilgiyi eksiksiz ve doğru olarak Eğitmene vermeyi kabul etmektedir. Üye/Veli, eğitimler sırasında Eğitmene bildirdiği bilgilerin doğruluğundan bizzat sorumludur.", {size: 8});
+        // ... Tüm sözleşme metnini buraya aynı mantıkla ekleyebilirsiniz.
+        yPos += line_height;
+
+        // Reşit olmayan üye bilgileri ekleniyor (eğer seçildiyse)
+        if (data.isMinorCheck === 'on') {
+            addText('REŞİT OLMAYAN ÜYE BEYANI', { style: 'bold' });
+            addText(`-Reşit olmayan katılımcının velisi olarak, aşağıda bilgileri bulunan katılımcı adına sözleşmeyi kabul ettiğimi beyan ederim.`);
+            addText(`Reşit Olmayanın Adı ve Soyadı: ${data.minorFullName}`);
+            addText(`Reşit Olmayanın Doğum Tarihi: ${data.minorDob}`);
+            addText(`Velisinin/Vasisinin Adı ve Soyadı: ${data.fullName}`);
+            yPos += line_height;
+        }
+
+        addText('ONAY VE İMZA', { style: 'bold' });
+        addText('Yukarıdaki sözleşme metnini okuduğumu, anladığımı ve tüm şartları kabul ettiğimi beyan ederim.');
+        
+        // Zaman Damgası
+        const timestamp = new Date().toLocaleString('tr-TR');
+        addText(`İmza Tarihi ve Zaman Damgası: ${timestamp}`);
+        yPos += line_height;
+
+        // İmza
+        const signatureData = canvas.toDataURL();
+        doc.addImage(signatureData, 'PNG', page_margin, yPos, 160, 60);
+
+        // --- PDF GÖNDERME VE İNDİRME ---
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+        
+        const templateParams = {
+            ...data,
+            timestamp: timestamp,
+            attachment: pdfBase64,
+            pdf_name: `${data.fullName.replace(/ /g, '_')}_sozlesme.pdf`
+        };
+
+        // LÜTFEN GÜNCELLEYİN: Kendi EmailJS bilgilerinizi girin
+        await emailjs.send('SENIN_SERVICE_ID_N', 'SENIN_TEMPLATE_ID_N', templateParams);
+
+        doc.save(`${data.fullName.replace(/ /g, '_')}_uyelik_sozlesmesi.pdf`);
+    }
+</script>
+</body>
+</html>
