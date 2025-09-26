@@ -1,87 +1,194 @@
-<!-- ... existing code ... -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            // Public Key'iniz doğru şekilde eklendi.
-            emailjs.init("NbbaYwpyVIocsaTaw"); 
-        })();
-    </script>
-    <style>
-<!-- ... existing code ... -->
-    // PDF Oluşturma, Gönderme ve İndirme Fonksiyonu (GÜNCELLENDİ)
-    async function generateAndSendPDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-        // ... PDF oluşturma kodları aynı kalacak ...
-        const page_margin = 50;
-        const line_height = 15;
-        const page_width = doc.internal.pageSize.getWidth();
-        let yPos = page_margin;
-
-        function addText(text, options = {}) {
-            const splitText = doc.splitTextToSize(text, page_width - page_margin * 2);
-            doc.setFont(options.font || 'helvetica', options.style || 'normal');
-            doc.setFontSize(options.size || 10);
-            doc.text(splitText, page_margin, yPos);
-            yPos += (splitText.length * line_height);
-            if (yPos > doc.internal.pageSize.getHeight() - page_margin) {
-                doc.addPage();
-                yPos = page_margin;
-            }
-        }
+async function downloadPDF(data) {
         
-        addText('ÜYELİK SÖZLEŞMESİ', { size: 16, style: 'bold' });
-        yPos += line_height;
-        addText('1-) TARAFLAR', { style: 'bold' });
-        addText('A-KULÜP', { style: 'bold' });
-        addText('Adı-Soyadı : Aykut YILDIRIM\nÜnvanı : Atakum Tenis\nAdres : Derecik Mahallesi 1444. Sokak No:1 İlkadım/Samsun\nVergi No : 9540639540\nTelefon : 0544 936 75 43\nE-mail : y.aykut7455@gmail.com');
-        yPos += line_height;
-        addText('B-ÜYE/VELİ', { style: 'bold' });
-        addText(`Adı-Soyadı : ${data.fullName}\nAdres : ${data.address}\nTCKN : ${data.tcno}\nTelefon : ${data.phone}\nE-mail : ${data.email}`);
-        yPos += line_height;
-        addText("İşbu sözleşmede bundan sonra “ÜYE/VELİ” olarak anılacaktır. Üye ve varsa veliye ait bilgiler yukarıda yer alan kısma ayrı ayrı yazılarak doldurulacaktır. Üye/Veli işbu sözleşmeyi onaylaması sırasında Eğitmen tarafından kendisinden talep edilen her türlü bilgiyi eksiksiz ve doğru olarak Eğitmene vermeyi kabul etmektedir. Üye/Veli, eğitimler sırasında Eğitmene bildirdiği bilgilerin doğruluğundan bizzat sorumludur.", {size: 8});
-        yPos += line_height;
-        if (data.isMinorCheck === 'on') {
-            addText('REŞİT OLMAYAN ÜYE BEYANI', { style: 'bold' });
-            addText(`-Reşit olmayan katılımcının velisi olarak, aşağıda bilgileri bulunan katılımcı adına sözleşmeyi kabul ettiğimi beyan ederim.`);
-            addText(`Reşit Olmayanın Adı ve Soyadı: ${data.minorFullName}`);
-            addText(`Reşit Olmayanın Doğum Tarihi: ${data.minorDob}`);
-            addText(`Velisinin/Vasisinin Adı ve Soyadı: ${data.fullName}`);
-            yPos += line_height;
-        }
-        addText('ONAY VE İMZA', { style: 'bold' });
-        addText('Yukarıdaki sözleşme metnini okuduğumu, anladığımı ve tüm şartları kabul ettiğimi beyan ederim.');
-        const timestamp = new Date().toLocaleString('tr-TR');
-        addText(`İmza Tarihi ve Zaman Damgası: ${timestamp}`);
-        yPos += line_height;
-        const signatureData = canvas.toDataURL();
-        doc.addImage(signatureData, 'PNG', page_margin, yPos, 160, 60);
+        // 1. PDF için optimize edilmiş HTML şablonu oluştur
+        const generatePdfHtml = (d) => {
+            const minorHtml = d.Resit_Olmayan_Uye_Mi === 'on' ? `
+                <div class="section">
+                    <h3>REŞİT OLMAYAN ÜYE BİLGİLERİ</h3>
+                    <p><strong>Adı Soyadı:</strong> ${d.Resit_Olmayan_Adi_Soyadi || 'Belirtilmedi'}</p>
+                    <p><strong>Doğum Tarihi:</strong> ${d.Resit_Olmayan_Dogum_Tarihi || 'Belirtilmedi'}</p>
+                </div>
+            ` : '';
 
-        // --- PDF GÖNDERME VE İNDİRME ---
-        const pdfBase64 = doc.output('datauristring').split(',')[1];
-        
-        // E-posta şablonları için ortak parametreler
-        const templateParams = {
-            ...data, // Formdaki tüm veriler
-            timestamp: timestamp,
-            attachment: pdfBase64,
-            pdf_name: `${data.fullName.replace(/ /g, '_')}_sozlesme.pdf`
+            // Sözleşme metnindeki tüm yer tutucuları gerçek verilerle değiştir
+            let filledContract = contractContent;
+            const replacements = [
+                { search: '[Bu alan formdan otomatik doldurulacaktır]', replace: d.Ad_Soyad },
+                { search: /\[Bu alan formdan otomatik doldurulacaktır\]/g, replace: function(match, offset, string) {
+                    // İlk geçen için Ad Soyad, ikinci için Adres, üçüncü için TC, dördüncü için Telefon, beşinci için E-posta
+                    const beforeText = string.substring(0, offset);
+                    const adSoyadCount = (beforeText.match(/Adı-Soyadı/g) || []).length;
+                    const adresCount = (beforeText.match(/Adres :/g) || []).length;
+                    const tcCount = (beforeText.match(/TCKN :/g) || []).length;
+                    const telefonCount = (beforeText.match(/Telefon :/g) || []).length;
+                    
+                    if (adSoyadCount > adresCount) return d.Ad_Soyad;
+                    else if (adresCount > tcCount) return d.Adres;
+                    else if (tcCount > telefonCount) return d.TC_Kimlik_No;
+                    else if (telefonCount === 1) return d.Telefon;
+                    else return d.Eposta;
+                }}
+            ];
+
+            // Tüm değiştirmeleri uygula
+            filledContract = filledContract.replace(/\[Bu alan formdan otomatik doldurulacaktır\]/g, function(match, offset, string) {
+                const beforeText = string.substring(0, offset);
+                if (beforeText.includes('Adı-Soyadı :') && !beforeText.includes('TCKN :')) return d.Ad_Soyad;
+                else if (beforeText.includes('Adres :') && !beforeText.includes('TCKN :')) return d.Adres;
+                else if (beforeText.includes('TCKN :')) return d.TC_Kimlik_No;
+                else if (beforeText.includes('Telefon :')) return d.Telefon;
+                else return d.Eposta;
+            });
+
+            return `
+            <!DOCTYPE html>
+            <html lang="tr">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    @page { 
+                        margin: 15mm; 
+                        size: A4; 
+                        orphans: 2;
+                        widows: 2;
+                    }
+                    body { 
+                        font-family: 'Times New Roman', serif; 
+                        font-size: 11px; 
+                        line-height: 1.4; 
+                        color: #000; 
+                        background: white;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .pdf-container { 
+                        width: 100%; 
+                        margin: 0; 
+                        padding: 0;
+                        background: white;
+                    }
+                    h1 { 
+                        font-size: 16px; 
+                        text-align: center; 
+                        color: #000; 
+                        border-bottom: 1px solid #000; 
+                        padding-bottom: 8px; 
+                        margin-bottom: 15px;
+                        page-break-after: avoid;
+                    }
+                    .section { 
+                        margin-bottom: 15px; 
+                        padding: 10px; 
+                        border: 1px solid #ccc; 
+                        page-break-inside: avoid;
+                        background: white;
+                    }
+                    .section h3 { 
+                        font-size: 12px; 
+                        color: #000; 
+                        margin: 0 0 8px 0;
+                        page-break-after: avoid;
+                        font-weight: bold;
+                    }
+                    .section p {
+                        margin-bottom: 4px;
+                        page-break-inside: avoid;
+                    }
+                    .contract { 
+                        font-size: 9px;
+                        line-height: 1.3;
+                    }
+                    .contract h4 {
+                        font-size: 11px;
+                        margin: 10px 0 5px 0;
+                        page-break-after: avoid;
+                    }
+                    .contract p {
+                        margin-bottom: 6px;
+                        text-align: justify;
+                    }
+                    .signature-block { 
+                        margin-top: 20px;
+                        page-break-inside: avoid;
+                    }
+                    .signature-img {
+                        width: 180px;
+                        height: auto;
+                        margin: 8px 0;
+                        border-bottom: 1px solid #000;
+                        display: block;
+                    }
+                    strong { font-weight: bold; }
+                    .no-break { page-break-inside: avoid; }
+                </style>
+            </head>
+            <body>
+                <div class="pdf-container">
+                    <h1>🎾 Atakum Tenis Kulübü Üyelik Sözleşmesi</h1>
+                    
+                    <div class="section no-break">
+                        <h3>ÜYE / VELİ BİLGİLERİ</h3>
+                        <p><strong>Ad Soyad:</strong> ${d.Ad_Soyad}</p>
+                        <p><strong>T.C. Kimlik No:</strong> ${d.TC_Kimlik_No}</p>
+                        <p><strong>Telefon:</strong> ${d.Telefon}</p>
+                        <p><strong>E-posta:</strong> ${d.Eposta}</p>
+                        <p><strong>Adres:</strong> ${d.Adres}</p>
+                        <p><strong>Üyelik Süresi:</strong> ${d.Uyelik_Suresi}</p>
+                    </div>
+                    
+                    ${minorHtml}
+
+                    <div class="section contract">
+                        <h3>SÖZLEŞME METNİ</h3>
+                        ${filledContract}
+                    </div>
+
+                    <div class="section signature-block no-break">
+                        <h3>ONAY VE İMZA</h3>
+                        <p>Yukarıdaki sözleşmeyi okuduğumu, anladığımı ve tüm şartlarını kabul ettiğimi beyan ederim.</p>
+                        <p><strong>İmza Tarihi:</strong> ${new Date(d.timestamp).toLocaleString('tr-TR')}</p>
+                        <p><strong>Dijital İmza:</strong></p>
+                        <img src="${d.signature}" class="signature-img" alt="Dijital İmza"/>
+                        <p style="margin-top: 10px;"><strong>İmza Sahibi:</strong> ${d.Ad_Soyad}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            `;
         };
+        
+        const pdfHtmlContent = generatePdfHtml(data);
 
-        // 1. E-POSTA: PATRONA BİLDİRİM GÖNDER
-        const sendToOwner = emailjs.send('service_h1se4bu', 'template_jg5fd9k', templateParams);
-
-        // 2. E-POSTA: ÜYEYE ONAY VE PDF GÖNDER
-        const sendToMember = emailjs.send('service_h1se4bu', 'template_0hvk6dg', templateParams);
-
-        // Her iki e-postanın da gönderilmesini bekle
-        await Promise.all([sendToOwner, sendToMember]);
-
-        console.log("Patrona ve üyeye e-postalar başarıyla gönderildi!");
-
-        // Son olarak PDF'i kullanıcıya indir
-        doc.save(`${data.fullName.replace(/ /g, '_')}_uyelik_sozlesmesi.pdf`);
+        // Optimize edilmiş PDF ayarları
+        const opt = {
+            margin: [10, 10, 10, 10], // mm cinsinden kenar boşlukları [üst, sağ, alt, sol]
+            filename: `${data.Ad_Soyad.replace(/\s+/g, '_')}_Tenis_Sozlesme_${new Date().toISOString().split('T')[0]}.pdf`,
+            image: { 
+                type: 'jpeg', 
+                quality: 0.95 
+            },
+            html2canvas: { 
+                scale: 1.5, 
+                useCORS: true, 
+                letterRendering: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 794, // A4 genişliği (210mm * 3.779)
+                height: 1123 // A4 yüksekliği (297mm * 3.779)
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait',
+                compress: true
+            },
+            pagebreak: { 
+                mode: ['avoid-all', 'css', 'legacy']
+            }
+        };
+        
+        // PDF'i oluştur ve indir
+        await html2pdf().set(opt).from(pdfHtmlContent).save();
     }
-</script>
-</body>
