@@ -1,194 +1,920 @@
-async function downloadPDF(data) {
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atakum Tenis Kulübü - Üyelik Sözleşmesi</title>
+    
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --dark-green: #2d5a27;
+            --light-green: #4a7c59;
+            --light-bg: #f8f9ff;
+            --border-color: #e1e5e9;
+        }
         
-        // 1. PDF için optimize edilmiş HTML şablonu oluştur
-        const generatePdfHtml = (d) => {
-            const minorHtml = d.Resit_Olmayan_Uye_Mi === 'on' ? `
-                <div class="section">
-                    <h3>REŞİT OLMAYAN ÜYE BİLGİLERİ</h3>
-                    <p><strong>Adı Soyadı:</strong> ${d.Resit_Olmayan_Adi_Soyadi || 'Belirtilmedi'}</p>
-                    <p><strong>Doğum Tarihi:</strong> ${d.Resit_Olmayan_Dogum_Tarihi || 'Belirtilmedi'}</p>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+            color: #333; 
+        }
+        
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); 
+            overflow: hidden; 
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, var(--dark-green) 0%, var(--light-green) 100%); 
+            color: white; 
+            padding: 30px; 
+            text-align: center; 
+        }
+        
+        .header h1 { 
+            font-size: 2.5em; 
+            margin-bottom: 10px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+        }
+        
+        .header p { 
+            font-size: 1.2em; 
+            opacity: 0.9; 
+        }
+        
+        .form-container { 
+            padding: 40px; 
+        }
+        
+        .form-section { 
+            margin-bottom: 30px; 
+            padding: 25px; 
+            border-radius: 15px; 
+            background: var(--light-bg); 
+            border-left: 5px solid var(--primary-color); 
+        }
+        
+        .section-title { 
+            font-size: 1.4em; 
+            color: var(--dark-green); 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px; 
+        }
+        
+        .form-group { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        label { 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            font-size: 0.95em; 
+        }
+        
+        input, select, textarea { 
+            padding: 12px 15px; 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            font-size: 1em; 
+            transition: all 0.3s ease; 
+            width: 100%; 
+        }
+        
+        input:focus, select:focus, textarea:focus { 
+            outline: none; 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); 
+        }
+        
+        .contract-text { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            border: 2px solid var(--border-color); 
+            height: 400px; 
+            overflow-y: auto; 
+            font-size: 0.85em; 
+            line-height: 1.6; 
+        }
+        
+        .signature-section { 
+            background: #fff; 
+            border: 2px dashed var(--primary-color); 
+            border-radius: 15px; 
+            padding: 30px; 
+            text-align: center; 
+        }
+        
+        .signature-canvas { 
+            border: 2px solid var(--border-color); 
+            border-radius: 10px; 
+            cursor: crosshair; 
+            display: block; 
+            margin: 20px auto; 
+            max-width: 100%; 
+        }
+        
+        .btn { 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 25px; 
+            font-size: 1em; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+        
+        .btn-secondary { 
+            background: #f8f9fa; 
+            color: #6c757d; 
+            border: 2px solid var(--border-color); 
+        }
+        
+        .btn-success { 
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+            color: white; 
+            font-size: 1.2em; 
+            padding: 15px 40px; 
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+        }
+        
+        .checkbox-group { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 15px; 
+            margin-top: 20px; 
+        }
+        
+        .checkbox-group input { 
+            width: 20px; 
+            height: 20px; 
+            margin-top: 3px; 
+            flex-shrink: 0;
+        }
+        
+        .warning, .info-box { 
+            background: #fff3cd; 
+            border-left: 5px solid #ffeaa7; 
+            color: #856404; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin: 15px 0; 
+        }
+        
+        .success-message { 
+            background: #d4edda; 
+            border: 1px solid #c3e6cb; 
+            color: #155724; 
+            padding: 20px; 
+            border-radius: 15px; 
+            text-align: center; 
+            margin-top: 20px; 
+            display: none; 
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 10px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .signature-canvas {
+                width: 100%;
+                max-width: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="container" id="main-container">
+        <div class="header">
+            <h1>🎾 Atakum Tenis Kulübü</h1>
+            <p>Online Üyelik Sözleşmesi</p>
+        </div>
+        <div class="form-container">
+            <form id="membershipForm">
+                <div class="form-section">
+                    <h3 class="section-title">👤 Üye / Veli Bilgileri</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="fullName">Ad Soyad *</label>
+                            <input type="text" id="fullName" name="Ad_Soyad" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tcno">T.C. Kimlik No *</label>
+                            <input type="text" id="tcno" name="TC_Kimlik_No" pattern="[0-9]{11}" maxlength="11" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Telefon *</label>
+                            <input type="tel" id="phone" name="Telefon" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-posta *</label>
+                            <input type="email" id="email" name="Eposta" required>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="address">Adres *</label>
+                        <textarea id="address" name="Adres" rows="3" required></textarea>
+                    </div>
                 </div>
-            ` : '';
+                 
+                <div class="form-section">
+                    <h3 class="section-title">🗓️ Üyelik Süresi</h3>
+                    <div class="form-group">
+                        <label for="membershipDuration">Üyelik Süresini Seçiniz *</label>
+                        <select id="membershipDuration" name="Uyelik_Suresi" required>
+                            <option value="">Seçiniz...</option>
+                            <option value="Aylık">Aylık</option>
+                            <option value="4 Aylık">4 Aylık</option>
+                        </select>
+                    </div>
+                    <div id="monthlyWarning" class="info-box" style="display: none;">
+                        <strong>Bilgilendirme:</strong> Aylık üyeliklerde, üyeliğinizi sonlandırmak için her ayın 14'üne kadar kayıt sildirmeniz gerekmektedir. Aksi takdirde üyelik otomatik olarak yenilenir.
+                    </div>
+                    <div id="fourMonthWarning" class="info-box" style="display: none;">
+                        <strong>Bilgilendirme:</strong> 4 aylık üyeliklerde, süreden önce iptal edilen üyeliklerde sözleşme gereği cayma bedeli tahsil edilir.
+                    </div>
+                </div>
+                 
+                <div class="form-section">
+                    <h3 class="section-title">👶 Reşit Olmayan Üye</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="isMinorCheck" name="Resit_Olmayan_Uye_Mi">
+                        <label for="isMinorCheck">18 yaşından küçük bir üye için dolduruyorum.</label>
+                    </div>
+                    <div id="minorFields" style="display: none; margin-top: 20px;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="minorFullName">Reşit Olmayanın Adı Soyadı *</label>
+                                <input type="text" id="minorFullName" name="Resit_Olmayan_Adi_Soyadi">
+                            </div>
+                            <div class="form-group">
+                                <label for="minorDob">Reşit Olmayanın Doğum Tarihi *</label>
+                                <input type="date" id="minorDob" name="Resit_Olmayan_Dogum_Tarihi">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 
+                <div class="form-section">
+                    <h3 class="section-title">📋 Üyelik Sözleşmesi</h3>
+                    <div class="contract-text" id="contractTextArea"></div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="agreeContract" name="Sozlesme_Onayi" value="Kabul Edildi" required>
+                        <label for="agreeContract">Üyelik sözleşmesini okudum, anladım ve kabul ediyorum. *</label>
+                    </div>
+                </div>
+                 
+                <div class="form-section">
+                    <h3 class="section-title">✍️ Dijital İmza</h3>
+                    <div class="signature-section">
+                        <p>Lütfen aşağıdaki alana imzanızı atın:</p>
+                        <canvas id="signatureCanvas" class="signature-canvas" width="400" height="200"></canvas>
+                        <div>
+                            <button type="button" class="btn btn-secondary" onclick="clearSignature()">İmzayı Temizle</button>
+                        </div>
+                        <div id="signatureWarning" class="warning" style="display: none; margin-top: 15px;">
+                            <strong>Uyarı:</strong> Lütfen dijital imzanızı tamamlayın.
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn btn-success" id="submitBtn">📄 Sözleşmeyi İmzala ve Onayla</button>
+                </div>
+                
+                <div class="success-message" id="successMessage">
+                    <h3>✅ Başarılı!</h3>
+                    <p>Üyelik sözleşmeniz başarıyla tamamlandı. Onay belgesi indiriliyor ve bilgileriniz kulübümüze iletiliyor.</p>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            // Sözleşme metnindeki tüm yer tutucuları gerçek verilerle değiştir
-            let filledContract = contractContent;
-            const replacements = [
-                { search: '[Bu alan formdan otomatik doldurulacaktır]', replace: d.Ad_Soyad },
-                { search: /\[Bu alan formdan otomatik doldurulacaktır\]/g, replace: function(match, offset, string) {
-                    // İlk geçen için Ad Soyad, ikinci için Adres, üçüncü için TC, dördüncü için Telefon, beşinci için E-posta
-                    const beforeText = string.substring(0, offset);
-                    const adSoyadCount = (beforeText.match(/Adı-Soyadı/g) || []).length;
-                    const adresCount = (beforeText.match(/Adres :/g) || []).length;
-                    const tcCount = (beforeText.match(/TCKN :/g) || []).length;
-                    const telefonCount = (beforeText.match(/Telefon :/g) || []).length;
-                    
-                    if (adSoyadCount > adresCount) return d.Ad_Soyad;
-                    else if (adresCount > tcCount) return d.Adres;
-                    else if (tcCount > telefonCount) return d.TC_Kimlik_No;
-                    else if (telefonCount === 1) return d.Telefon;
-                    else return d.Eposta;
-                }}
-            ];
+    <!-- HTML2PDF kütüphanesi -->
+    <script>
+        // HTML2PDF kütüphanesini dinamik olarak yükle
+        function loadHTML2PDF() {
+            return new Promise((resolve, reject) => {
+                if (window.html2pdf) {
+                    resolve();
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                script.onload = () => resolve();
+                script.onerror = () => {
+                    console.warn('HTML2PDF CDN yüklenemedi, alternatif yol deneniyor...');
+                    // Alternatif CDN
+                    const altScript = document.createElement('script');
+                    altScript.src = 'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js';
+                    altScript.onload = () => resolve();
+                    altScript.onerror = () => reject(new Error('HTML2PDF yüklenemedi'));
+                    document.head.appendChild(altScript);
+                };
+                document.head.appendChild(script);
+            });
+        }
 
-            // Tüm değiştirmeleri uygula
-            filledContract = filledContract.replace(/\[Bu alan formdan otomatik doldurulacaktır\]/g, function(match, offset, string) {
-                const beforeText = string.substring(0, offset);
-                if (beforeText.includes('Adı-Soyadı :') && !beforeText.includes('TCKN :')) return d.Ad_Soyad;
-                else if (beforeText.includes('Adres :') && !beforeText.includes('TCKN :')) return d.Adres;
-                else if (beforeText.includes('TCKN :')) return d.TC_Kimlik_No;
-                else if (beforeText.includes('Telefon :')) return d.Telefon;
-                else return d.Eposta;
+        // Sayfa yüklendiğinde kütüphaneyi yükle
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await loadHTML2PDF();
+                console.log('HTML2PDF kütüphanesi yüklendi');
+                initializeApp();
+            } catch (error) {
+                console.error('HTML2PDF yüklenirken hata:', error);
+                // PDF olmadan da çalışabilsin
+                initializeApp();
+            }
+        });
+
+        function initializeApp() {
+            // --- SABİTLER ---
+            const webhookUrl = 'https://n8n.edu-ai.online/webhook-test/10a31aa5-c942-46ec-bc5c-b221c24e5eae';
+            
+            // --- SÖZLEŞME METNİ ---
+            const contractContent = `<h4>ÜYELİK SÖZLEŞMESİ</h4>
+                <p><strong>1-) TARAFLAR</strong><br>
+                <strong>A-KULÜP</strong><br>
+                Adı-Soyadı : Aykut YILDIRIM<br>
+                Ünvanı : Atakum Tenis<br>
+                Adres : Derecik Mahallesi 1444. Sokak No:1 İlkadım/Samsun<br>
+                Vergi No : 9540639540<br>
+                Telefon : 0544 936 75 43<br>
+                E-mail : y.aykut7455@gmail.com<br>
+                Bu sözleşmede bundan sonra "EĞİTMEN/KULÜP" olarak anılacaktır.<br>
+                <strong>B-ÜYE/VELİ</strong><br>
+                Adı-Soyadı : [Bu alan formdan otomatik doldurulacaktır]<br>
+                Adres : [Bu alan formdan otomatik doldurulacaktır]<br>
+                TCKN : [Bu alan formdan otomatik doldurulacaktır]<br>
+                Telefon : [Bu alan formdan otomatik doldurulacaktır]<br>
+                E-mail : [Bu alan formdan otomatik doldurulacaktır]<br>
+                Bu sözleşmede bundan sonra "ÜYE/VELİ" olarak anılacaktır. Üye ve varsa veliye ait bilgiler yukarıda
+                yer alan kısma ayrı ayrı yazılarak doldurulacaktır.</p>
+                <p>Üye/Veli işbu sözleşmeyi onaylaması sırasında Eğitmen tarafından kendisinden talep edilen her türlü
+                bilgiyi eksiksiz ve doğru olarak Eğitmene vermeyi kabul etmektedir. Üye/Veli, eğitimler sırasında Eğitmene
+                bildirdiği bilgilerin doğruluğundan bizzat sorumludur.</p>
+                <p>Üye/Veli, işbu sözleşmeye onayı esnasında beyan etmiş olduğu cep telefonu numarası ve e-posta
+                adresinin Eğitmen tarafından yapılacak her türlü bildirim için geçerli tebligat mecraları sayılacağını, bu cep
+                telefonu numarası ve e-posta adresinin kullanımı ile ilgili her türlü yetkinin kendisinde olduğunu, ilgili cep
+                telefonu numarası ve e-posta adresinin 3. kişiler tarafından kullanıldığı şüphesinin varlığı halinde bu durumu
+                ve her halde cep telefonu numarası ve e-posta adresinde meydana gelen değişiklikleri Eğitmene bildirmekle
+                yükümlü olduğunu kabul ve taahhüt eder.</p>
+                <p><strong>2-) KONU</strong><br>
+                İşbu üyelik sözleşmesi, üyelik işlemlerinin gerçekleştirilmesi ile işbu sözleşmenin onaylanması
+                suretiyle, Eğitmen tarafından sunulacak hizmetin şartlarını ve tarafların karşılıklı hak ve yükümlülüklerini
+                düzenlemektedir.</p>
+                <p><strong>3-) SÜRE</strong><br>
+                Sözleşme süresi aylık ve 6 aylık periyotlar halinde düzenlenmekte olup; kayıtlar sözleşmenin biteceği
+                ayın 15'inden önce iptal edilmediği takdirde aylık veya 6 aylık olarak uzatılmış sayılmaktadır. Kayıt
+                silinmediği takdirde yeni döneme ilişkin ücret Üye/Veli tarafından kulübe ödenecektir.</p>
+                <p><strong>4-) ÜCRET</strong><br>
+                Üyelik bedeli, Üyelik satış formunda belirtilen üyelik paketine göre …. Ay, aylık…….. TL olup; işbu
+                bedel Üye/Veli tarafından ödenecektir.</p>
+                <p><strong>5-) ÖDEMELER</strong><br>
+                Ödemelerin her ayın 20'sine kadar belirtilen hesaba yapılması gerekmektedir. Dönem tarihlerine göre
+                eksik ya da fazla ödeme durumu oluşabilir. Ödemelerin zamanında yapılmaması durumunda; Üye/Veli,
+                yapacağı ödemenin %25'i tutarında cezai şart ödemeyi kabul ve taahhüt eder.</p>
+                <p>Yapılan ödemeler, derslere katılım taahhüdü olarak kabul edilir. Üyenin derslere katılamaması
+                sebebiyle ücret iadesi yapılmaz.</p>
+                <p><strong>6-) ÜYELİK İPTALLERİ</strong><br>
+                Her ayın 14'ü kayıt sildirme için son gündür. Bu tarihler sonrasında yapılan kayıt sildirmelerde yeni
+                dönem ücreti tahsil edilir.</p>
+                <p>Kulübe veya kulüp tesislerine zarar verici davranışlarda bulunulması durumunda kulüp üyeliği
+                sonlandırılabilir.</p>
+                <p>1) Daimî Hastalık<br>
+                Üyenin, üyelik süresi içerisinde derslere gelmesini veya derslerdeki aktivitelere katılmasını
+                engelleyecek daimî bir hastalığa tutulması ve bu durumun tam teşekküllü devlet hastanesinden alınmış heyet
+                raporu ile belgelenmesi halinde üyelik iptal edilir. Üyenin üyelik ücretinin tamamını ödemiş olması
+                durumunda, kullanılmayan süreye ait ödenen ücretten %.10kesinti yapılarak, kalan tutar faizsiz olarak
+                Üye/Veliye iade edilir. Kullanılan hizmet süresinin bedeli iade olunmaz. Üye/Veli, bu madde gereğince işlem
+                yapılabilmesi için, hastalığa ilişkin raporunu üst yazı ile birlikte Eğitmene verecektir. Hastalığa ilişkin
+                raporun, rapor tarihinden itibaren en geç 10 gün içerisinde verilmesi gerekmektedir. Geç verilen rapor ve
+                dilekçeler işlem görmeyecek, geçersiz kabul edilecektir.</p>
+                <p>2) Eğitmenin Tek Taraflı Fesih Hakkı<br>
+                Eğitmen taraflar arasındaki işbu sözleşmeyi her zaman 5 gün önceden bildirimde bulunmak kaydıyla
+                herhangi bir gerekçe göstermeksizin tek taraflı olarak feshedebilir.</p>
+                <p>Üye/Veli, işbu sözleşmeyi imzalayarak bu maddeyi peşinen kabul etmiş sayılır. Bu durumda Eğitmen
+                Üyenin kullanılmayan süreye ilişkin Üyelik ücretini ödemiş olması durumunda, ödemiş olduğu ücreti faizsiz
+                olarak 5 gün içerisinde Üye/Veliye iade edecektir.</p>
+                <p>Ayrıca Eğitmen haklı bir nedenin varlığı halinde sözleşmeyi herhangi bir süre olmaksızın derhal tek
+                taraflı olarak da feshedebilir. Bu durumda, üyenin üyelik ücretinin kullanılmayan kısmı iade edilmez.</p>
+                <p><strong>7-) EĞİTİME İLİŞKİN KURALLAR</strong><br>
+                A) Üyelik Şartları ile Üye/Velinin Hak ve Yükümlülükleri<br>
+                1) Eğitmen, her türlü üyelik talebini hiçbir gerekçe göstermeksizin tek taraflı olarak reddetme hakkına sahiptir.<br>
+                2) Eğitmenden, suç işlememiş ve herhangi bir yüz kızartıcı suçtan sabıka kaydı bulunmayan T.C. vatandaşları
+                ile yabancı uyruklu kişiler ders alabilir. Eğitmenin bu hususa ilişkin adli sicil belgesi (sabıka kaydı) talep etme
+                ve değerlendirme hakkı saklıdır.<br>
+                3) Eğitmen Üye/Veliden, bulaşıcı hastalıklar gibi toplumu veya diğer Üye/Velilerin sağlığını tehlikeye
+                düşürebilecek bir hastalığının bulunmadığına dair sağlık raporu ya da tahlil sonucu talep edebilir. Söz konusu
+                tahliller sonucunda bulaşıcı hastalık ve benzeri bir bulguya rastlanması halinde Eğitmen, Üyeliği yapacağı bir
+                fesih bildirimi ile sona erdirme hakkına haizdir.<br>
+                4) Üye/Veli, üyelik için gerekli olan her türlü belgeyi eksiksiz ve doğru bir şekilde temin edecek; üyelik onayı
+                için ve/veya üyeliğin devamı sırasında Eğitmen tarafından talep edilecek her türlü bilgi, belge, rapor vb.
+                hususları derhal temin ederek Eğitmene ibraz edecektir.<br>
+                5) Üyelerin spor faaliyetine katılmak için gerekli sağlık şartlarını taşıyıp taşımadıkları, spor aktivitesine uygun
+                olup olmadıkları, tıbbi kontrollerini yaptırıp yaptırmadıkları veya sağlık danışmanlarının yaptığı tıbbi
+                tavsiyelerden ya da bunların neticelerinden dolayı Eğitmenin herhangi bir sorumluluğu bulunmamaktadır.
+                Üye/Veli, üyelik sözleşmesini imzaladığı andan itibaren; sağlık durumunun spor yapmaya elverişli olduğunu,
+                spor faaliyetine katılmasına engel bir özrü ve rahatsızlığının bulunmadığını, faaliyete katılmasının sağlığına
+                ve fiziksel durumuna bir zarar vermeyeceğini beyan ve taahhüt etmiştir.<br>
+                6) Üyelerin, ders veya aktivitelerden faydalanmamaları halinde dahi belirlenen bedelleri zamanında ve tam
+                olarak ödemeleri zorunludur. Üyelerin yapılacak aktivitelerden veya verilecek derslerden yararlanmamaları
+                hiçbir şekil ve şartta Üye/Veliye üyelik bedelini ödememe hakkı vermemektedir. Üye derslerden yararlanmasa
+                dahi Üyelika bedellerini ödemek zorundadır.<br>
+                7) Üye/Veli, kendisinin veya misafirlerinin şahsi kusurları, dikkatsizliği veya ihmalleri ile; kulübe veya 3.
+                Kişilere ait eşyalar üzerinde meydana getirecekleri tüm hasar ve zarardan ve yine diğer Üye/Velilerin yahut
+                Eğitmen çalışanlarının ve 3. kişilerin uğramış olduğu tüm zarar ve kayıplardan sorumludur.</p>
+                <p>B) KULÜP KURALLARI<br>
+                a) Grup dersleri aylık 8 derstir.<br>
+                b) Grup derslerinde ders bir kez işlendiğinden, üyenin katılamadığı dersler için telafi yapılmaz.<br>
+                c) Özel ders paketleri 1 aylık süreyle geçerlidir. Bu süre içinde kullanılmayan ders hakları bir sonraki aya
+                devredilmez.<br>
+                d) Spor branşlarında herhangi bir kaza, yaralanma veya sağlık problemi durumunda sorumluluk tamamen
+                Üye/Veliye aittir.<br>
+                e) Kayıt sildirme işlemi yapıldığında sistem üzerinden tüm kişisel verileriniz ve kayıt bilgileriniz silinir.<br>
+                f) Üyelerin derse zamanında, uygun kıyafetle ve hazır şekilde gelmesi Üye/Velilerin sorumluluğundadır.<br>
+                g) Kayıt silme talebinde bulunan öğrencinin kalan dersleri mevcut dönem tarihleri içerisinde yapılır.</p>
+                <p>C) GENEL KURALLAR<br>
+                1) Kulüp bünyesinde Üye/Veliler genel nezaket kurallarına uymakla yükümlüdürler. Kort içinde veya dışında
+                nezaket kurallarına uymayan davranışlarda bulunan, huzuru kaçıran, hakaret, küfür kullanan Üye/Velilerin
+                Üye/Velilikleri herhangi bir uyarıya gerek kalmadan resen iptal edilebilir. Bu takdirde Üye/Velilik bedelleri
+                kısmen dahi geri ödenmez.<br>
+                2) Kayıp eşyalardan Kulüp sorumlu değildir.<br>
+                3) Üye/Veli ruhsatlı bile olsa Kulüp'e delici, kesici ve patlayıcı alet veya silahla giremez. Aksi hallerde
+                Üye/Veli Kulüp'e giremeyecektir.<br>
+                4) Üye/Velinin Kapalı alanlarda ve Kulüp tarafından yasaklanan alanlarda sigara içmesi kesinlikle yasaktır.<br>
+                5) Kulüp içine dışarıdan yiyecek içecek getirmek yasaktır.<br>
+                6) Soyunma odalarındaki dolaplar günlük kullanım içindir. Üye/Velinin tek dolap kullanım hakkı vardır.<br>
+                7) Üye/Veliler, tüm eşyalarını dolap içine koymalı, dolap kapaklarına ve/veya dışına herhangi bir eşya
+                asmamalı ve dolaplarını kilitlemelidirler. Dolaplar kullanım sonrası tamamen boşaltılmalıdır.<br>
+                8) Dolap içinde cep telefonları sessiz konumda bırakılmalıdır.<br>
+                9) Günlük dolaplar kullanım sonrası boş ve açık olarak bırakılmalıdır. Kulüp, hijyen ve güvenlik nedenleri ile
+                gün sonunda kilitli dolapları görevli yönetici eşliğinde açma ve içindeki eşyaları boşaltma hakkına sahiptir.
+                Dolapta bırakılan eşyanın kaybolmasından veya hasarından Kulüp sorumlu tutulamaz.<br>
+                10) Soyunma odalarında görüntü/ses kaydı yapılması kesinlikle yasaktır. Aksi davranışta bulunanların tespiti
+                halinde, Kulüp tarafından her türlü hak saklı tutulmak kaydı ile Üye/Velilik feshi hükümleri
+                uygulanabilecektir. Üye/Veli, soyunma odalarında gerçekleştirilen görüntü/ses kaydının sonuçlarından
+                Kulüp'ün hiçbir sorumluluğu olmadığını kabul, beyan ve taahhüt eder.<br>
+                11) Soyunma odalarında özel ve değerli eşya bırakılmamalıdır. Bırakılan eşyaların kaybolmasından veya
+                hasarından Kulüp sorumlu tutulamaz.<br>
+                12) Kulüp, sunduğu hizmetler ve çalışmalar ile ilgili kurallar ve uygulamalarda, zaman ve ihtiyaca bağlı
+                değişiklikler yapabilir, yeni maddeler ilave edebilir. Olabilecek bütün değişiklikler Üye/Velilere bildirilir.<br>
+                13) Tesisin tüm alanlarında Üye/Velilerin hijyeni, sağlığı ve güvenliği düşünülerek hazırlanan prosedür ve
+                kullanım kurallarına uyulması zorunludur.<br>
+                14) Kulüp sınırları içerisinde (açık ve kapalı alan fark etmeksizin) sigara içmek yasaktır.</p>
+                <p><strong>8- KİŞİSEL VE ÖZEL NİTELİKLİ KİŞİSEL VERİLERİN İŞLENMESİ</strong><br>
+                Üye/Veli, işbu sözleşmeye taraf olma suretiyle, verdiği tüm bilgilerin ve/veya Üye/Velilik ilişkisinin
+                devamına herhangi bir suretle Kulüp'e verdiği tüm kişisel bilgilerinin, sağlık geçmişi bilgilerinin, Üye/Velilik
+                süresince elde edilen kişisel ve özel nitelikli kişisel verilerinin, Üye/Velilik bedelinin ödenmesiyle bağlantılı
+                olarak elektronik ve diğer ortamlarda verilen/verilecek bilgilerin, "Veri Sorumlusu" sıfatıyla Kulüp tarafından
+                ve Kulüp ortakları, iş ortakları, halefleri ve/veya bunların belirleyeceği üçüncü kişiler tarafından, mezkur
+                verilerin gizliliklerinin korunması için gerekli tedbirleri almak ve kişisel verilerin işlenmesine dair kanuni
+                ilkelere uymak suretiyle otomatik olan/olmayan yöntemler ile alınmasına, devralınmasına, yasal süreler
+                aşılmamak üzere yurt içinde ve/veya yurt dışında yazılı/dijital arşivlere kaydedilmesine, depolanmasına,
+                muhafaza edilmesine, elde edilebilir hale getirilmesine, kullanılmasına, güncellenmesine, değiştirilmesine,
+                yeniden düzenlenmesine, sınıflandırılmasına, yurt içinde veya yurt dışına aktarılmasına ve sair kanunlara
+                uygun şekilde herhangi bir suretle işlenmesine, bu hususta Kulüp tarafından çeşitli mecralar üzerinden
+                aydınlatılmış ve yasal hakları hakkında bilgilirilmiş olarak açıkça izin(rıza/onay) verdiğini kabul, beyan
+                ve taahhüt eder.</p>
+                <p>1. Veri Sorumlusu:<br>
+                Aykut YILDIRIM<br>
+                Adres :<br>
+                Telefon :<br>
+                E-posta :</p>
+                <p>2. Kişisel Verilerin İşlenme Amaçları:<br>
+                Kişisel verileriniz; Üye/Velilik işlemleri, spor etkinliklerine katılım yönetimi, iletişim faaliyetleri,
+                güvenlik kayıtlarının tutulması, kulüp içi bilgilendirme ve organizasyon amaçlarıyla işlenmektedir. Ayrıca
+                yasal yükümlülüklerimizi yerine getirmek, hukuki taleplere yanıt vermek ve sizinle iletişim kurmak amacıyla
+                da kullanılmaktadır.</p>
+                <p>3. Toplanan Kişisel Veriler:<br>
+                Ad, soyad, iletişim bilgileri, doğum tarihi, spor etkinliklerine ilişkin bilgiler gibi kişisel veriler
+                toplanmaktadır.</p>
+                <p>4. Kişisel Verilerin İşlenme Hukuki Sebepleri:<br>
+                Verileriniz, KVKK'nın 5. ve 6. maddeleri kapsamında; açık rıza, sözleşmenin kurulması veya ifası,
+                yasal yükümlülüklerin yerine getirilmesi, hakların tesisi, kullanılması veya korunması gibi hukuki sebepler
+                doğrultusunda işlenmektedir.</p>
+                <p>5. Kişisel Verilerin Saklama Süresi:<br>
+                Kişisel verileriniz, işlenme amacının gerektirdiği süre boyunca saklanacak, bu sürenin sonunda
+                silinecek veya anonim hale getirilecektir.</p>
+                <p>6. Kişisel Veri Sahiplerinin Hakları:<br>
+                KVKK uyarınca veri sahipleri;<br>
+                • Kişisel verilerinin işlenip işlenmediğini öğrenme,<br>
+                • İşlenmişse buna ilişkin bilgi talep etme,<br>
+                • İşleme amacını ve amaca uygun kullanılıp kullanılmadığını öğrenme,<br>
+                • Verilerin aktarıldığı üçüncü kişileri bilme,<br>
+                • Eksik veya yanlış işlenmiş verilerin düzeltilmesini isteme,<br>
+                • Verilerin silinmesini veya yok edilmesini talep etme,<br>
+                • Bu işlemlerin üçüncü kişilere bildirilmesini isteme,<br>
+                • Otomatik sistemlerle analiz sonucu aleyhe çıkan sonuçlara itiraz etme hakkına sahiptir.</p>
+                <p><strong>9-) SON HÜKÜMLER</strong><br>
+                1) Bu anlaşmanın uygulanmasından kaynaklanan tüm ihtilaflarda Samsun mahkemeleri ve icra daireleri
+                yetkilidir.<br>
+                2) Tarafların sözleşmenin girişinde unvanları altında adresler sözleşme uyarınca kanuni tebligat adresleri
+                olarak kabul edilecek ve bu adreslere yapılan tebligatlar kendilerine yapılmış sayılacaktır. Taraflardan biri
+                adresinde meydana gelen değişikliği 5 (beş) gün içerisinde diğer tarafa bildirmediği takdirde yukarıdaki yer
+                alan adreslere Tebligat Kanunu hükümleri dahilinde yapılacak ihbar ve tebligat muteber olacaktır.<br>
+                3)Üye/Veli, cep telefonu ve/veya e-mail adres değişikliğini yazılı olarak Eğitmene bildirmediği takdirde,
+                bildirmiş olduğu cep telefonu ve/veya e-posta adresine yapılacak bildirimlerin geçerli olacağını ve kendisine
+                tebligatın yapılmış sayılacağını kabul, beyan ve taahhüt eder. İşbu üyelik nedeniyle yapılacak her türlü
+                bildirim, sözleşmenin kabulü sırasında, üye tarafından bildirilen cep telefonu ve/veya e posta adresine
+                gönderilecek mesaj aracılığı ile sağlanacaktır.</p>
+                <p>ÜYE/VELİ EĞİTMEN<br>
+                -Reşit olmayan katılımcıların velileri veya vasileri için Üye, işbu belge ile aşağıda adı geçen katılımcı için
+                yasal sorumluluğu olan bir veli/vasi olarak, yukarıda belirtilen şekilde şahsın ibrasına muvafakat ettiğini ve
+                ibrayı kabul ettiğini beyan eder. Yaşı küçük çocuğunun sağlanan programlara katılımı veya programlarla
+                ilişkisi nedeniyle meydana gelen her türlü sorumluluk doğuran olaylardan dolayı Kulüp'ü, sahibini, ortaklarını
+                ve çalışanlarını sorumlu tutmayacağını taahhüt eder.</p>
+                <p>Reşit Olmayanın Adı ve Soyadı:<br>
+                Reşit Olmayanın Doğum Tarihi:<br>
+                Velisinin/Vasisinin Adı ve Soyadı:<br>
+                Velisinin/Vasisinin İmzası:</p>`;
+
+            // Sözleşme metnini DOM'a yükle
+            document.getElementById('contractTextArea').innerHTML = contractContent;
+
+            // --- EVENT LİSTENERLAR ---
+            
+            // Üyelik süresi değişikliği
+            const durationSelect = document.getElementById('membershipDuration');
+            durationSelect.addEventListener('change', function() {
+                document.getElementById('monthlyWarning').style.display = (this.value === 'Aylık') ? 'block' : 'none';
+                document.getElementById('fourMonthWarning').style.display = (this.value === '4 Aylık') ? 'block' : 'none';
             });
 
-            return `
-            <!DOCTYPE html>
-            <html lang="tr">
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    * { margin: 0; padding: 0; box-sizing: border-box; }
-                    @page { 
-                        margin: 15mm; 
-                        size: A4; 
-                        orphans: 2;
-                        widows: 2;
-                    }
-                    body { 
-                        font-family: 'Times New Roman', serif; 
-                        font-size: 11px; 
-                        line-height: 1.4; 
-                        color: #000; 
-                        background: white;
-                        margin: 0;
-                        padding: 0;
-                    }
-                    .pdf-container { 
-                        width: 100%; 
-                        margin: 0; 
-                        padding: 0;
-                        background: white;
-                    }
-                    h1 { 
-                        font-size: 16px; 
-                        text-align: center; 
-                        color: #000; 
-                        border-bottom: 1px solid #000; 
-                        padding-bottom: 8px; 
-                        margin-bottom: 15px;
-                        page-break-after: avoid;
-                    }
-                    .section { 
-                        margin-bottom: 15px; 
-                        padding: 10px; 
-                        border: 1px solid #ccc; 
-                        page-break-inside: avoid;
-                        background: white;
-                    }
-                    .section h3 { 
-                        font-size: 12px; 
-                        color: #000; 
-                        margin: 0 0 8px 0;
-                        page-break-after: avoid;
-                        font-weight: bold;
-                    }
-                    .section p {
-                        margin-bottom: 4px;
-                        page-break-inside: avoid;
-                    }
-                    .contract { 
-                        font-size: 9px;
-                        line-height: 1.3;
-                    }
-                    .contract h4 {
-                        font-size: 11px;
-                        margin: 10px 0 5px 0;
-                        page-break-after: avoid;
-                    }
-                    .contract p {
-                        margin-bottom: 6px;
-                        text-align: justify;
-                    }
-                    .signature-block { 
-                        margin-top: 20px;
-                        page-break-inside: avoid;
-                    }
-                    .signature-img {
-                        width: 180px;
-                        height: auto;
-                        margin: 8px 0;
-                        border-bottom: 1px solid #000;
-                        display: block;
-                    }
-                    strong { font-weight: bold; }
-                    .no-break { page-break-inside: avoid; }
-                </style>
-            </head>
-            <body>
-                <div class="pdf-container">
-                    <h1>🎾 Atakum Tenis Kulübü Üyelik Sözleşmesi</h1>
-                    
-                    <div class="section no-break">
-                        <h3>ÜYE / VELİ BİLGİLERİ</h3>
-                        <p><strong>Ad Soyad:</strong> ${d.Ad_Soyad}</p>
-                        <p><strong>T.C. Kimlik No:</strong> ${d.TC_Kimlik_No}</p>
-                        <p><strong>Telefon:</strong> ${d.Telefon}</p>
-                        <p><strong>E-posta:</strong> ${d.Eposta}</p>
-                        <p><strong>Adres:</strong> ${d.Adres}</p>
-                        <p><strong>Üyelik Süresi:</strong> ${d.Uyelik_Suresi}</p>
-                    </div>
-                    
-                    ${minorHtml}
+            // Reşit olmayan üye kontrolü
+            const isMinorCheck = document.getElementById('isMinorCheck');
+            isMinorCheck.addEventListener('change', function() {
+                const isChecked = this.checked;
+                document.getElementById('minorFields').style.display = isChecked ? 'block' : 'none';
+                document.getElementById('minorFullName').required = isChecked;
+                document.getElementById('minorDob').required = isChecked;
+            });
 
-                    <div class="section contract">
-                        <h3>SÖZLEŞME METNİ</h3>
-                        ${filledContract}
-                    </div>
+            // --- İMZA CANVAS ---
+            const canvas = document.getElementById('signatureCanvas');
+            const ctx = canvas.getContext('2d');
+            let hasSignature = false;
 
-                    <div class="section signature-block no-break">
-                        <h3>ONAY VE İMZA</h3>
-                        <p>Yukarıdaki sözleşmeyi okuduğumu, anladığımı ve tüm şartlarını kabul ettiğimi beyan ederim.</p>
-                        <p><strong>İmza Tarihi:</strong> ${new Date(d.timestamp).toLocaleString('tr-TR')}</p>
-                        <p><strong>Dijital İmza:</strong></p>
-                        <img src="${d.signature}" class="signature-img" alt="Dijital İmza"/>
-                        <p style="margin-top: 10px;"><strong>İmza Sahibi:</strong> ${d.Ad_Soyad}</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            `;
-        };
-        
-        const pdfHtmlContent = generatePdfHtml(data);
-
-        // Optimize edilmiş PDF ayarları
-        const opt = {
-            margin: [10, 10, 10, 10], // mm cinsinden kenar boşlukları [üst, sağ, alt, sol]
-            filename: `${data.Ad_Soyad.replace(/\s+/g, '_')}_Tenis_Sozlesme_${new Date().toISOString().split('T')[0]}.pdf`,
-            image: { 
-                type: 'jpeg', 
-                quality: 0.95 
-            },
-            html2canvas: { 
-                scale: 1.5, 
-                useCORS: true, 
-                letterRendering: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
-                logging: false,
-                width: 794, // A4 genişliği (210mm * 3.779)
-                height: 1123 // A4 yüksekliği (297mm * 3.779)
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: 'portrait',
-                compress: true
-            },
-            pagebreak: { 
-                mode: ['avoid-all', 'css', 'legacy']
+            function resizeCanvas() {
+                const container = canvas.parentElement;
+                canvas.width = Math.min(400, container.clientWidth - 60);
+                canvas.height = 200;
+                ctx.strokeStyle = "#2d5a27";
+                ctx.lineWidth = 2;
+                ctx.lineCap = "round";
             }
-        };
-        
-        // PDF'i oluştur ve indir
-        await html2pdf().set(opt).from(pdfHtmlContent).save();
-    }
+
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            let isDrawing = false;
+
+            const getCoords = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches ? e.touches[0] : null;
+                return {
+                    x: (touch ? touch.clientX : e.clientX) - rect.left,
+                    y: (touch ? touch.clientY : e.clientY) - rect.top
+                };
+            };
+
+            const startDrawing = (e) => {
+                e.preventDefault();
+                isDrawing = true;
+                hasSignature = true;
+                const { x, y } = getCoords(e);
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            };
+
+            const draw = (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const { x, y } = getCoords(e);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            };
+
+            const stopDrawing = () => {
+                isDrawing = false;
+            };
+
+            // Mouse events
+            canvas.addEventListener("mousedown", startDrawing);
+            canvas.addEventListener("mousemove", draw);
+            canvas.addEventListener("mouseup", stopDrawing);
+            canvas.addEventListener("mouseout", stopDrawing);
+
+            // Touch events
+            canvas.addEventListener("touchstart", startDrawing);
+            canvas.addEventListener("touchmove", draw);
+            canvas.addEventListener("touchend", stopDrawing);
+
+            // Global clear function
+            window.clearSignature = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                hasSignature = false;
+                document.getElementById("signatureWarning").style.display = "none";
+            };
+
+            // --- FORM SUBMIT ---
+            document.getElementById('membershipForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!hasSignature) { 
+                    document.getElementById('signatureWarning').style.display = 'block'; 
+                    return; 
+                }
+                
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'İşleniyor...';
+                document.body.classList.add('loading');
+
+                try {
+                    const formData = Object.fromEntries(new FormData(this).entries());
+                    formData.timestamp = new Date().toISOString();
+                    formData.signature = canvas.toDataURL('image/png');
+
+                    // 1. PDF oluştur ve indir
+                    if (window.html2pdf) {
+                        await downloadPDF(formData);
+                    } else {
+                        console.warn('PDF kütüphanesi mevcut değil, sadece veri gönderiliyor');
+                        alert('PDF indirme şu anda mevcut değil, ancak verileriniz kaydedildi.');
+                    }
+
+                    // 2. Webhook'a veri gönder
+                    try {
+                        const response = await fetch(webhookUrl, {
+                            method: 'POST',
+                            body: JSON.stringify(formData),
+                            headers: { 'Content-Type': 'application/json' },
+                            mode: 'no-cors'
+                        });
+                        console.log('Webhook gönderildi');
+                    } catch (webhookError) {
+                        console.error("Webhook gönderim hatası:", webhookError);
+                    }
+
+                    // Başarı mesajı göster
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Formu temizle
+                    this.reset();
+                    clearSignature();
+                    document.getElementById('monthlyWarning').style.display = 'none';
+                    document.getElementById('fourMonthWarning').style.display = 'none';
+                    document.getElementById('minorFields').style.display = 'none';
+
+                } catch (error) {
+                    console.error("İşlem sırasında hata oluştu:", error);
+                    alert("Bir hata oluştu. Lütfen tekrar deneyin veya sayfayı yenileyin.");
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    document.body.classList.remove('loading');
+                }
+            });
+
+            // --- PDF FONKSİYONU ---
+            async function downloadPDF(data) {
+                if (!window.html2pdf) {
+                    throw new Error('HTML2PDF kütüphanesi yüklenmemiş');
+                }
+                
+                // PDF için optimize edilmiş HTML şablonu oluştur
+                const generatePdfHtml = (d) => {
+                    const minorHtml = d.Resit_Olmayan_Uye_Mi === 'on' ? `
+                        <div class="section">
+                            <h3>REŞİT OLMAYAN ÜYE BİLGİLERİ</h3>
+                            <p><strong>Adı Soyadı:</strong> ${d.Resit_Olmayan_Adi_Soyadi || 'Belirtilmedi'}</p>
+                            <p><strong>Doğum Tarihi:</strong> ${d.Resit_Olmayan_Dogum_Tarihi || 'Belirtilmedi'}</p>
+                        </div>
+                    ` : '';
+
+                    // Sözleşme metnindeki yer tutucuları gerçek verilerle değiştir
+                    let filledContract = contractContent;
+                    filledContract = filledContract.replace(/\[Bu alan formdan otomatik doldurulacaktır\]/g, function(match, offset, string) {
+                        const beforeText = string.substring(0, offset);
+                        if (beforeText.includes('Adı-Soyadı :') && !beforeText.includes('TCKN :')) return d.Ad_Soyad;
+                        else if (beforeText.includes('Adres :') && !beforeText.includes('TCKN :')) return d.Adres;
+                        else if (beforeText.includes('TCKN :')) return d.TC_Kimlik_No;
+                        else if (beforeText.includes('Telefon :')) return d.Telefon;
+                        else return d.Eposta;
+                    });
+
+                    return `
+                    <!DOCTYPE html>
+                    <html lang="tr">
+                    <head>
+                        <meta charset="UTF-8">
+                        <style>
+                            * { margin: 0; padding: 0; box-sizing: border-box; }
+                            @page { 
+                                margin: 15mm; 
+                                size: A4; 
+                                orphans: 2;
+                                widows: 2;
+                            }
+                            body { 
+                                font-family: 'Times New Roman', serif; 
+                                font-size: 11px; 
+                                line-height: 1.4; 
+                                color: #000; 
+                                background: white;
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .pdf-container { 
+                                width: 100%; 
+                                margin: 0; 
+                                padding: 0;
+                                background: white;
+                            }
+                            h1 { 
+                                font-size: 16px; 
+                                text-align: center; 
+                                color: #000; 
+                                border-bottom: 1px solid #000; 
+                                padding-bottom: 8px; 
+                                margin-bottom: 15px;
+                                page-break-after: avoid;
+                            }
+                            .section { 
+                                margin-bottom: 15px; 
+                                padding: 10px; 
+                                border: 1px solid #ccc; 
+                                page-break-inside: avoid;
+                                background: white;
+                            }
+                            .section h3 { 
+                                font-size: 12px; 
+                                color: #000; 
+                                margin: 0 0 8px 0;
+                                page-break-after: avoid;
+                                font-weight: bold;
+                            }
+                            .section p {
+                                margin-bottom: 4px;
+                                page-break-inside: avoid;
+                            }
+                            .contract { 
+                                font-size: 9px;
+                                line-height: 1.3;
+                            }
+                            .contract h4 {
+                                font-size: 11px;
+                                margin: 10px 0 5px 0;
+                                page-break-after: avoid;
+                            }
+                            .contract p {
+                                margin-bottom: 6px;
+                                text-align: justify;
+                            }
+                            .signature-block { 
+                                margin-top: 20px;
+                                page-break-inside: avoid;
+                            }
+                            .signature-img {
+                                width: 180px;
+                                height: auto;
+                                margin: 8px 0;
+                                border-bottom: 1px solid #000;
+                                display: block;
+                            }
+                            strong { font-weight: bold; }
+                            .no-break { page-break-inside: avoid; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="pdf-container">
+                            <h1>🎾 Atakum Tenis Kulübü Üyelik Sözleşmesi</h1>
+                            
+                            <div class="section no-break">
+                                <h3>ÜYE / VELİ BİLGİLERİ</h3>
+                                <p><strong>Ad Soyad:</strong> ${d.Ad_Soyad}</p>
+                                <p><strong>T.C. Kimlik No:</strong> ${d.TC_Kimlik_No}</p>
+                                <p><strong>Telefon:</strong> ${d.Telefon}</p>
+                                <p><strong>E-posta:</strong> ${d.Eposta}</p>
+                                <p><strong>Adres:</strong> ${d.Adres}</p>
+                                <p><strong>Üyelik Süresi:</strong> ${d.Uyelik_Suresi}</p>
+                            </div>
+                            
+                            ${minorHtml}
+
+                            <div class="section contract">
+                                <h3>SÖZLEŞME METNİ</h3>
+                                ${filledContract}
+                            </div>
+
+                            <div class="section signature-block no-break">
+                                <h3>ONAY VE İMZA</h3>
+                                <p>Yukarıdaki sözleşmeyi okuduğumu, anladığımı ve tüm şartlarını kabul ettiğimi beyan ederim.</p>
+                                <p><strong>İmza Tarihi:</strong> ${new Date(d.timestamp).toLocaleString('tr-TR')}</p>
+                                <p><strong>Dijital İmza:</strong></p>
+                                <img src="${d.signature}" class="signature-img" alt="Dijital İmza"/>
+                                <p style="margin-top: 10px;"><strong>İmza Sahibi:</strong> ${d.Ad_Soyad}</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    `;
+                };
+                
+                const pdfHtmlContent = generatePdfHtml(data);
+
+                // Optimize edilmiş PDF ayarları
+                const opt = {
+                    margin: [10, 10, 10, 10], // mm cinsinden kenar boşlukları
+                    filename: `${data.Ad_Soyad.replace(/\s+/g, '_')}_Tenis_Sozlesme_${new Date().toISOString().split('T')[0]}.pdf`,
+                    image: { 
+                        type: 'jpeg', 
+                        quality: 0.95 
+                    },
+                    html2canvas: { 
+                        scale: 1.5, 
+                        useCORS: true, 
+                        letterRendering: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        width: 794,
+                        height: 1123
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'portrait',
+                        compress: true
+                    },
+                    pagebreak: { 
+                        mode: ['avoid-all', 'css', 'legacy']
+                    }
+                };
+                
+                // PDF'i oluştur ve indir
+                await html2pdf().set(opt).from(pdfHtmlContent).save();
+            }
+
+            console.log('Atakum Tenis Kulübü formu başarıyla yüklendi!');
+        }
+    </script>
+</body>
+</html>
